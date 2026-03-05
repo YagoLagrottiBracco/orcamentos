@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Plataforma de Orçamentos — MVP
 
-## Getting Started
+Sistema de solicitação e geração de orçamentos com painel de cliente e admin.
 
-First, run the development server:
+## Stack
+- **Frontend/Backend**: Next.js 14 (App Router + API Routes)
+- **Banco de dados**: SQLite via Prisma
+- **Auth**: NextAuth.js com email/senha
+- **Estilo**: TailwindCSS v4
+- **PDF**: pdf-lib
+- **Email**: nodemailer
+
+## Como rodar
 
 ```bash
+# 1. Instalar dependências
+npm install
+
+# 2. Criar o banco de dados
+npx prisma db push
+
+# 3. Popular com dados de exemplo
+npx prisma db seed
+
+# 4. Iniciar servidor de desenvolvimento
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Acesse: [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Credenciais de Teste
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Usuário        | E-mail                  | Senha       |
+|---------------|-------------------------|-------------|
+| Administrador | admin@sistema.com       | admin123    |
+| Cliente       | cliente@exemplo.com     | cliente123  |
 
-## Learn More
+## Configuração de E-mail
 
-To learn more about Next.js, take a look at the following resources:
+Edite `.env.local` com suas credenciais SMTP:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```env
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=seu-email@gmail.com
+EMAIL_PASS=sua-senha-de-app
+EMAIL_FROM="Plataforma de Orçamentos <seu-email@gmail.com>"
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+> **Dica**: Para testes locais, use [Mailtrap](https://mailtrap.io) (gratuito). Os erros de email em desenvolvimento **nunca** travam o fluxo.
 
-## Deploy on Vercel
+## Estrutura de Pastas
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+src/
+├── app/
+│   ├── api/
+│   │   ├── auth/        # NextAuth + registro
+│   │   ├── requests/    # CRUD de solicitações
+│   │   └── quotes/      # Criar orçamento
+│   ├── admin/           # Painel do administrador
+│   ├── dashboard/       # Painel do cliente
+│   ├── login/
+│   └── register/
+├── components/
+│   ├── Navbar.tsx
+│   └── StatusBadge.tsx
+└── lib/
+    ├── auth.ts          # NextAuth config
+    ├── email.ts         # Nodemailer
+    ├── pdf.ts           # pdf-lib
+    └── prisma.ts        # Singleton Prisma client
+prisma/
+├── schema.prisma        # Modelos: User, Request, Quote
+├── seed.ts              # Dados de exemplo
+└── dev.db               # Banco SQLite (gerado)
+public/
+└── pdfs/                # PDFs gerados dos orçamentos
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Fluxo Principal
+
+1. **Cliente** cria conta → faz login → solicita orçamento
+2. **Admin** acessa `/admin` → abre solicitação → cria orçamento
+3. Sistema gera PDF e envia e-mail para o cliente
+4. **Cliente** vê o orçamento em `/dashboard/requests/[id]` e baixa o PDF
